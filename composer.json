@@ -1,0 +1,32 @@
+{
+    "name": "nghia-kun/laravel-file-export",
+    "description": "Reusable TSV/ZIP export service and folder compression service for Laravel projects",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+        "illuminate/database": "^9.0|^10.0|^11.0|^12.0",
+        "ext-zip": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "NghiaKun\\FileExport\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NghiaKun\\FileExport\\FileExportServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "homepage": "https://github.com/bhnghia1012/file-export",
+    "authors": [
+        {
+            "name": "bui.nghia",
+            "email": "bhnghia1012@gmail.com"
+        }
+    ]
+}
