@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Export\{{ namespace }};
+
+use NghiaKun\FileExport\Export\BaseExport;
+
+class {{ class }} extends BaseExport
+{
+    public function query()
+    {
+        //
+    }
+
+    public function headings(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public function map($row): array
+    {
+        return [
+            //
+        ];
+    }
+}

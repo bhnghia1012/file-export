@@ -3,19 +3,10 @@
 namespace NghiaKun\FileExport\Export;
 
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use NghiaKun\FileExport\Compress\ZipService;
-use NghiaKun\FileExport\Export\Interfaces\PrimaryKey;
-use NghiaKun\FileExport\Export\Interfaces\WithChunkReading;
-use NghiaKun\FileExport\Export\Interfaces\WithCountTotal;
-use NghiaKun\FileExport\Export\Interfaces\WithCustomCsvSettings;
-use NghiaKun\FileExport\Export\Interfaces\WithHeadings;
-use NghiaKun\FileExport\Export\Interfaces\WithMapping;
-use NghiaKun\FileExport\Export\Interfaces\WithReadingStrategy;
-use stdClass;
 
 class ExportService
 {
@@ -26,20 +17,16 @@ class ExportService
     protected BaseExport $exportModel;
     protected string $location;
     protected string $format;
-    protected bool $countTotal = true;
-    protected array $interfaces;
-    protected int $chunkSize = 1000;
-    protected array $headings = [];
+    protected bool $countTotal;
+    protected int $chunkSize;
+    protected array $headings;
     protected $myFile;
-    protected string $primaryKey = 'id';
-    protected string $readingStrategy = self::STRATEGY_CURSOR;
-    protected array $settings = [
-        'delimiter' => ',',
-        'enclosure' => '',
-    ];
+    protected string $primaryKey;
+    protected string $readingStrategy;
+    protected array $settings;
 
     protected int $total = 0;
-    protected int $recordsPerFile = 50000;
+    protected int $recordsPerFile;
     protected int $currentFileRecords = 0;
     protected int $currentFileIndex = 0;
     protected array $tsvFiles = [];
@@ -51,35 +38,14 @@ class ExportService
         $this->exportModel = $exportModel;
         $this->location = $location;
         $this->format = $format;
-        $this->interfaces = class_implements($exportModel);
 
-        if (in_array(WithChunkReading::class, $this->interfaces)) {
-            $this->chunkSize = $this->exportModel->chunkSize();
-        }
-
-        if (in_array(WithHeadings::class, $this->interfaces)) {
-            $this->headings = $this->exportModel->headings();
-        }
-
-        if (in_array(PrimaryKey::class, $this->interfaces)) {
-            $this->primaryKey = $this->exportModel->primaryKey();
-        }
-
-        if (in_array(WithReadingStrategy::class, $this->interfaces)) {
-            $this->readingStrategy = $this->exportModel->readingStrategy();
-        }
-
-        if (in_array(WithCountTotal::class, $this->interfaces)) {
-            $this->countTotal = $this->exportModel->shouldCountTotal();
-        }
-
-        if (in_array(WithCustomCsvSettings::class, $this->interfaces)) {
-            $customSettings = $this->exportModel->getCsvSettings();
-
-            foreach ($customSettings as $key => $customSetting) {
-                $this->settings[$key] = $customSetting;
-            }
-        }
+        $this->chunkSize = $exportModel->chunkSize();
+        $this->headings = $exportModel->headings();
+        $this->primaryKey = $exportModel->primaryKey();
+        $this->readingStrategy = $exportModel->readingStrategy();
+        $this->countTotal = $exportModel->shouldCountTotal();
+        $this->settings = $exportModel->getCsvSettings();
+        $this->recordsPerFile = config('export.records_per_file', 50000);
     }
 
     public function handle()
@@ -180,15 +146,9 @@ class ExportService
         }
     }
 
-    protected function getOutput(Model|array|stdClass $item): string
+    protected function getOutput($item): string
     {
-        if (in_array(WithMapping::class, $this->interfaces)) {
-            $fields = $this->exportModel->map($item);
-        } elseif (is_array($item)) {
-            $fields = $item;
-        } else {
-            $fields = $item->toArray();
-        }
+        $fields = $this->exportModel->map($item);
 
         $fields = array_map(fn ($field) => $this->sanitizeField($field), $fields);
 
